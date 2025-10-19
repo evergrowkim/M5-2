@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다중 시추공 지반공학 통합 분석 시스템 V3.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/main.css">
+    <script type="module" src="scripts/app.js" defer></script>
+</head>
+<body>
+    <div class="container mx-auto max-w-7xl p-4">
+        <!-- 헤더 -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-4 border border-gray-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">다중 시추공 지반공학 통합 분석 시스템</h1>
+                    <p class="text-sm text-gray-600 mt-1">Multi-Borehole Geotechnical Analysis System V3.1</p>
+                </div>
+                <div class="text-right text-sm text-gray-500">
+                    <p>설계기준: KDS 11 10 10</p>
+                    <p>참고문헌: Meyerhof(1976), Bowles(1997), Terzaghi &amp; Peck(1967)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 프로젝트 정보 -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-4 border border-gray-300">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">프로젝트 정보</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">공사명</label>
+                    <input type="text" id="projectName" value="전주 기지촌 주택 재개발 정비사업"
+                           class="input-field w-full">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">프로젝트 코드</label>
+                    <input type="text" id="projectCode" value="JJ-2024-001"
+                           class="input-field w-full">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">발주처</label>
+                    <input type="text" id="client" value="전주시청"
+                           class="input-field w-full">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">설계일자</label>
+                    <input type="date" id="designDate" value="2024-01-15"
+                           class="input-field w-full">
+                </div>
+            </div>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="bg-white rounded-t-lg shadow-sm border border-gray-300 border-b-0">
+            <div class="flex">
+                <button onclick="switchTab('borehole')" id="tab-borehole"
+                        class="px-6 py-3 tab-active font-medium transition-colors">
+                    시추공 관리
+                </button>
+                <button onclick="switchTab('analysis')" id="tab-analysis"
+                        class="px-6 py-3 tab-inactive font-medium transition-colors">
+                    통합 분석
+                </button>
+                <button onclick="switchTab('comparison')" id="tab-comparison"
+                        class="px-6 py-3 tab-inactive font-medium transition-colors">
+                    비교 분석
+                </button>
+            </div>
+        </div>
+
+        <!-- 메인 컨텐츠 영역 -->
+        <div class="bg-white rounded-b-lg shadow-sm p-6 border border-gray-300">
+            <!-- 시추공 관리 탭 -->
+            <div id="content-borehole" class="tab-content">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">시추공 목록</h3>
+                        <button onclick="addBorehole()" class="btn-primary">
+                            + 시추공 추가
+                        </button>
+                    </div>
+
+                    <!-- 시추공 리스트 테이블 -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">시추공 번호</th>
+                                    <th class="text-left">위치 (X, Y)</th>
+                                    <th class="text-left">지표 표고 EL.(m)</th>
+                                    <th class="text-left">굴착 레벨 EL.(m)</th>
+                                    <th class="text-left">굴착 깊이 (m)</th>
+                                    <th class="text-left">시추 심도 (m)</th>
+                                    <th class="text-left">지층 수</th>
+                                    <th class="text-left">상태</th>
+                                    <th class="text-left">작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boreholeList">
+                                <!-- 동적 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 선택된 시추공 상세 정보 -->
+                <div id="boreholeDetail" class="hidden mt-6 p-4 border border-gray-300 rounded">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">시추공 상세 정보</h3>
+                    <div id="boreholeDetailContent">
+                        <!-- 동적 생성 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통합 분석 탭 -->
+            <div id="content-analysis" class="tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">기초 설계 조건</h3>
+
+                        <!-- 굴착 레벨 강조 표시 -->
+                        <div class="excavation-highlight mb-4">
+                            <h4 class="font-semibold text-yellow-800 mb-2">⚠️ 굴착 레벨 설정 (중요)</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-sm text-gray-700 mb-1">계획 굴착 레벨 EL.(m)</label>
+                                    <input type="number" id="plannedExcavationLevel" value="45.47" step="0.01"
+                                           class="input-field w-full bg-yellow-50 font-bold"
+                                           onchange="updateExcavationInfo()">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-700 mb-1">평균 지표고 EL.(m)</label>
+                                    <input type="number" id="averageGroundLevel" value="51.05" step="0.01"
+                                           class="input-field w-full" readonly>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-sm">
+                                <span class="font-semibold">굴착 깊이:</span>
+                                <span id="excavationDepthDisplay" class="text-blue-700 font-bold">5.58 m</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">기초 유형</label>
+                                <select id="foundationType" class="input-field w-full">
+                                    <option value="mat">전면기초 (Mat)</option>
+                                    <option value="strip">줄기초 (Strip)</option>
+                                    <option value="isolated">독립기초 (Isolated)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">기초폭 B (m)</label>
+                                <input type="number" id="foundationWidth" value="24.93" step="0.01"
+                                       class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">기초길이 L (m)</label>
+                                <input type="number" id="foundationLength" value="24.93" step="0.01"
+                                       class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">
+                                    근입깊이 Df (m)
+                                    <span class="text-xs text-blue-600">[굴착면 기준]</span>
+                                </label>
+                                <input type="number" id="embedmentDepth" value="1.08" step="0.01"
+                                       class="input-field w-full bg-blue-50">
+                                <p class="text-xs text-gray-500 mt-1">
+                                    기초 저면 EL. = <span id="foundationBottomEL">44.39</span> m
+                                </p>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">설계하중 Q (kN/m²)</label>
+                                <input type="number" id="designLoad" value="400" step="1"
+                                       class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">안전율 FS</label>
+                                <input type="number" id="safetyFactor" value="3.0" step="0.1"
+                                       class="input-field w-full">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">분석 옵션</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">지지력 계산 방법</label>
+                                <select id="bearingMethod" class="input-field w-full">
+                                    <option value="Terzaghi">Terzaghi (1943)</option>
+                                    <option value="Meyerhof">Meyerhof (1963)</option>
+                                    <option value="Hansen">Hansen (1970)</option>
+                                    <option value="All">모든 방법 비교</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">침하 계산 방법</label>
+                                <select id="settlementMethod" class="input-field w-full">
+                                    <option value="schmertmann">Schmertmann (1978)</option>
+                                    <option value="elastic">탄성이론</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">
+                                    지하수위 (GL-m)
+                                    <span class="text-xs text-gray-500">[원지반 기준]</span>
+                                </label>
+                                <input type="number" id="waterTable" value="2.0" step="0.1"
+                                       class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">허용침하량 (mm)</label>
+                                <input type="number" id="allowableSettlement" value="25" step="1"
+                                       class="input-field w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">설계년수 (년)</label>
+                                <input type="number" id="designLife" value="5" step="1"
+                                       class="input-field w-full">
+                            </div>
+                        </div>
+
+                        <!-- 레벨 정보 요약 -->
+                        <div class="mt-4 p-3 bg-gray-50 rounded border border-gray-300">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">레벨 정보 요약</h4>
+                            <div class="text-xs space-y-1">
+                                <div>평균 지표고: EL. <span id="avgGroundLevel">51.05</span> m</div>
+                                <div>굴착 레벨: EL. <span id="excLevel">45.47</span> m</div>
+                                <div>기초 저면: EL. <span id="foundLevel">44.39</span> m</div>
+                                <div>굴착 깊이: <span id="excDepth">5.58</span> m</div>
+                                <div>근입 깊이 (굴착면 기준): <span id="embedDepth">1.08</span> m</div>
+                            </div>
+                        </div>
+
+                        <button onclick="runAnalysis()" class="btn-primary w-full mt-6">
+                            전체 시추공 분석 실행
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 분석 결과 표시 영역 -->
+                <div id="analysisResults" class="hidden mt-6">
+                    <!-- 동적 생성 -->
+                </div>
+            </div>
+
+            <!-- 비교 분석 탭 -->
+            <div id="content-comparison" class="tab-content hidden">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">시추공간 비교 분석</h3>
+                    <div id="comparisonContent">
+                        <!-- 동적 생성 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
